@@ -33,7 +33,10 @@ public class Vertex2D {
         this.y = y;
     }
 
-    @Override
+    /**
+     * This method returns string representing vertex
+     * @return string
+     */
     public String toString() {
         return "[" + x + ", " + y + "]";
     }
