@@ -4,8 +4,8 @@ package cz.muni.fi.pb162.project.geometry;
  * @author Michael Skor
  */
 public class Vertex2D {
-    private double x;
-    private double y;
+    private final double x;
+    private final double y;
 
     /**
      * Constructor of Vertex2D
@@ -21,16 +21,8 @@ public class Vertex2D {
         return x;
     }
 
-    public void setX(double x) {
-        this.x = x;
-    }
-
     public double getY() {
         return y;
-    }
-
-    public void setY(double y) {
-        this.y = y;
     }
 
     /**
@@ -38,7 +30,7 @@ public class Vertex2D {
      * @return string
      */
     public String toString() {
-        return "[" + x + ", " + y + "]";
+        return String.format("[%s, %s]", x, y);
     }
 
     /**
@@ -48,5 +40,17 @@ public class Vertex2D {
      */
     public Vertex2D createMiddle(Vertex2D vertex) {
         return new Vertex2D((this.x + vertex.x)/2.0, (this.y + vertex.y)/2.0);
+    }
+
+    /**
+     * Method calculates distance of points
+     * @param point: given point
+     * @return distance of points
+     */
+    public double distance(Vertex2D point) {
+        if (point == null) {
+            return -1.0;
+        }
+        return Math.sqrt(Math.pow(point.x - this.x, 2) + Math.pow(point.y - this.y, 2));
     }
 }

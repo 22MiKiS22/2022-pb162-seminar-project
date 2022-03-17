@@ -6,6 +6,7 @@ package cz.muni.fi.pb162.project.geometry;
 public class Triangle {
     private final Vertex2D[] vertices;
     private final Triangle[] triangles = {null, null, null};
+    private static final double DEVIATION = 0.001;
 
     /**
      * Constructor of Triangle
@@ -18,12 +19,24 @@ public class Triangle {
     }
 
     /**
+     * Constructor of Triangle with depth
+     * @param a: first vertex
+     * @param b: second vertex
+     * @param c: third vertex
+     * @param depth: division depth
+     */
+    public Triangle(Vertex2D a, Vertex2D b, Vertex2D c, int depth) {
+        this(a, b, c);
+        divide(depth);
+    }
+
+    /**
      * Method returns desired vertex
      * @param index: index of desired vertex
      * @return Vertex2D: desired vertex
      */
     public Vertex2D getVertex(int index) {
-        if (myRange(index)) {
+        if (inRange(index)) {
             return vertices[index];
         }
         return null;
@@ -35,20 +48,21 @@ public class Triangle {
      * @param vertex: new vertex
      */
     public void setVertex(int index, Vertex2D vertex) {
-        if (myRange(index)) {
+        if (inRange(index)) {
             vertices[index] = vertex;
         }
     }
 
-    private boolean myRange(int index) {
+    private boolean inRange(int index) {
         return index >= 0 && index <= 2;
     }
 
     @Override
     public String toString() {
-        return String.format("Triangle: vertices=%s %s %s", vertices[0].toString(),
-                vertices[1].toString(),
-                vertices[2].toString());
+        return String.format("Triangle: vertices=%s %s %s",
+                vertices[0],
+                vertices[1],
+                vertices[2]);
     }
 
     /**
@@ -70,6 +84,18 @@ public class Triangle {
     }
 
     /**
+     * Method divides triangles to smaller triangles until depth > 0
+     */
+    public void divide(int depth) {
+        if (depth > 0) {
+            divide();
+            for (int i = 0; i < 3; i++) {
+                triangles[i].divide(depth - 1);
+            }
+        }
+    }
+
+    /**
      * This method checks if the triangle is already divided
      * @return true: divided, or false
      */
@@ -83,9 +109,22 @@ public class Triangle {
      * @return pointer to desired sub-triangle or null when error occurs
      */
     public Triangle getSubTriangle(int index) {
-        if (myRange(index)) {
+        if (inRange(index)) {
             return triangles[index];
         }
         return null;
+    }
+
+    /**
+     * This method controls if the triangle is equilateral
+     * @return true if triangle is equilateral, else false
+     */
+    public boolean isEquilateral() {
+        double sideA = vertices[0].distance(vertices[1]);
+        double sideB = vertices[0].distance(vertices[2]);
+        double sideC = vertices[2].distance(vertices[1]);
+        return  Math.abs(sideA - sideB) <= DEVIATION &&
+                Math.abs(sideA - sideC) <= DEVIATION &&
+                Math.abs(sideB - sideC) <= DEVIATION;
     }
 }
