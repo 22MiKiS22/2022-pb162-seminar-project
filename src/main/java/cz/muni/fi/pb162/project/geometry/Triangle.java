@@ -1,9 +1,14 @@
 package cz.muni.fi.pb162.project.geometry;
 
+import static cz.muni.fi.pb162.project.utils.SimpleMath.maxX;
+import static cz.muni.fi.pb162.project.utils.SimpleMath.maxY;
+import static cz.muni.fi.pb162.project.utils.SimpleMath.minX;
+import static cz.muni.fi.pb162.project.utils.SimpleMath.minY;
+
 /**
  * @author Michael Skor
  */
-public class Triangle {
+public class Triangle implements Measurable {
     private final Vertex2D[] vertices;
     private final Triangle[] triangles = {null, null, null};
     private static final double DEVIATION = 0.001;
@@ -53,6 +58,11 @@ public class Triangle {
         }
     }
 
+    /**
+     * This method controls if number is in range [0..2]
+     * @param index: controlled number
+     * @return true or false
+     */
     private boolean inRange(int index) {
         return index >= 0 && index <= 2;
     }
@@ -126,5 +136,15 @@ public class Triangle {
         return  Math.abs(sideA - sideB) <= DEVIATION &&
                 Math.abs(sideA - sideC) <= DEVIATION &&
                 Math.abs(sideB - sideC) <= DEVIATION;
+    }
+
+    @Override
+    public double getWidth() {
+        return maxX(this) - minX(this);
+    }
+
+    @Override
+    public double getHeight() {
+        return maxY(this) - minY(this);
     }
 }

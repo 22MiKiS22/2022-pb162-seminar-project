@@ -3,7 +3,7 @@ package cz.muni.fi.pb162.project.geometry;
 /**
  * @author Michael Skor
  */
-public class Circle {
+public class Circle implements Measurable, Circular {
     private final double radius;
     private final Vertex2D center;
 
@@ -24,10 +24,12 @@ public class Circle {
         this.center = center;
     }
 
+    @Override
     public double getRadius() {
         return radius;
     }
 
+    @Override
     public Vertex2D getCenter() {
         return center;
     }
@@ -35,7 +37,17 @@ public class Circle {
     @Override
     public String toString() {
         return String.format("Circle: center=%s, radius=%s",
-                center.toString(),
+                center,
                 radius);
+    }
+
+    @Override
+    public double getWidth() {
+        return radius * 2;
+    }
+
+    @Override
+    public double getHeight() {
+        return radius * 2;
     }
 }
