@@ -53,4 +53,20 @@ public class Vertex2D {
         }
         return Math.sqrt(Math.pow(point.x - this.x, 2) + Math.pow(point.y - this.y, 2));
     }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (object == null || this.getClass() != object.getClass()) {
+            return false;
+        }
+        return x == ((Vertex2D) object).getX() && y == ((Vertex2D) object).getY();
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * (int) x + (int) y;
+    }
 }

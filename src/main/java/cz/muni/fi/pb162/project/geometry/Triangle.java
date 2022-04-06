@@ -1,15 +1,9 @@
 package cz.muni.fi.pb162.project.geometry;
 
-import static cz.muni.fi.pb162.project.utils.SimpleMath.maxX;
-import static cz.muni.fi.pb162.project.utils.SimpleMath.maxY;
-import static cz.muni.fi.pb162.project.utils.SimpleMath.minX;
-import static cz.muni.fi.pb162.project.utils.SimpleMath.minY;
-
 /**
  * @author Michael Skor
  */
-public class Triangle implements Measurable {
-    private final Vertex2D[] vertices;
+public class Triangle extends ArrayPolygon implements Measurable {
     private final Triangle[] triangles = {null, null, null};
     private static final double DEVIATION = 0.001;
 
@@ -20,7 +14,7 @@ public class Triangle implements Measurable {
      * @param c: third vertex
      */
     public Triangle(Vertex2D a, Vertex2D b, Vertex2D c) {
-        this.vertices = new Vertex2D[]{a, b, c};
+        super(new Vertex2D[] {a, b ,c});
     }
 
     /**
@@ -36,29 +30,6 @@ public class Triangle implements Measurable {
     }
 
     /**
-     * Method returns desired vertex
-     * @param index: index of desired vertex
-     * @return Vertex2D: desired vertex
-     */
-    public Vertex2D getVertex(int index) {
-        if (inRange(index)) {
-            return vertices[index];
-        }
-        return null;
-    }
-
-    /**
-     * Method replaces vertex with desired index with given vertex
-     * @param index: index of vertex to replace
-     * @param vertex: new vertex
-     */
-    public void setVertex(int index, Vertex2D vertex) {
-        if (inRange(index)) {
-            vertices[index] = vertex;
-        }
-    }
-
-    /**
      * This method controls if number is in range [0..2]
      * @param index: controlled number
      * @return true or false
@@ -70,9 +41,9 @@ public class Triangle implements Measurable {
     @Override
     public String toString() {
         return String.format("Triangle: vertices=%s %s %s",
-                vertices[0],
-                vertices[1],
-                vertices[2]);
+                super.getVertex(0),
+                super.getVertex(1),
+                super.getVertex(2));
     }
 
     /**
@@ -83,12 +54,12 @@ public class Triangle implements Measurable {
         if (isDivided()) {
             return false;
         }
-        Vertex2D middleA = vertices[0].createMiddle(vertices[1]);
-        Vertex2D middleB = vertices[0].createMiddle(vertices[2]);
-        Vertex2D middleC = vertices[2].createMiddle(vertices[1]);
-        triangles[0] = new Triangle(vertices[0], middleA, middleB);
-        triangles[1] = new Triangle(vertices[1], middleA, middleC);
-        triangles[2] = new Triangle(vertices[2], middleC, middleB);
+        Vertex2D middleA = super.getVertex(0).createMiddle(super.getVertex(1));
+        Vertex2D middleB = super.getVertex(0).createMiddle(super.getVertex(2));
+        Vertex2D middleC = super.getVertex(2).createMiddle(super.getVertex(1));
+        triangles[0] = new Triangle(super.getVertex(0), middleA, middleB);
+        triangles[1] = new Triangle(super.getVertex(1), middleA, middleC);
+        triangles[2] = new Triangle(super.getVertex(2), middleC, middleB);
 
         return true;
     }
@@ -130,21 +101,11 @@ public class Triangle implements Measurable {
      * @return true if triangle is equilateral, else false
      */
     public boolean isEquilateral() {
-        double sideA = vertices[0].distance(vertices[1]);
-        double sideB = vertices[0].distance(vertices[2]);
-        double sideC = vertices[2].distance(vertices[1]);
+        double sideA = super.getVertex(0).distance(super.getVertex(1));
+        double sideB = super.getVertex(0).distance(super.getVertex(2));
+        double sideC = super.getVertex(2).distance(super.getVertex(1));
         return  Math.abs(sideA - sideB) <= DEVIATION &&
                 Math.abs(sideA - sideC) <= DEVIATION &&
                 Math.abs(sideB - sideC) <= DEVIATION;
-    }
-
-    @Override
-    public double getWidth() {
-        return maxX(this) - minX(this);
-    }
-
-    @Override
-    public double getHeight() {
-        return maxY(this) - minY(this);
     }
 }
