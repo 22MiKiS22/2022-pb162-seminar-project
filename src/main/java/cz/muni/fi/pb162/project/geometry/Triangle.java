@@ -41,9 +41,9 @@ public class Triangle extends ArrayPolygon implements Measurable {
     @Override
     public String toString() {
         return String.format("Triangle: vertices=%s %s %s",
-                super.getVertex(0),
-                super.getVertex(1),
-                super.getVertex(2));
+                getVertex(0),
+                getVertex(1),
+                getVertex(2));
     }
 
     /**
@@ -54,12 +54,12 @@ public class Triangle extends ArrayPolygon implements Measurable {
         if (isDivided()) {
             return false;
         }
-        Vertex2D middleA = super.getVertex(0).createMiddle(super.getVertex(1));
-        Vertex2D middleB = super.getVertex(0).createMiddle(super.getVertex(2));
-        Vertex2D middleC = super.getVertex(2).createMiddle(super.getVertex(1));
-        triangles[0] = new Triangle(super.getVertex(0), middleA, middleB);
-        triangles[1] = new Triangle(super.getVertex(1), middleA, middleC);
-        triangles[2] = new Triangle(super.getVertex(2), middleC, middleB);
+        Vertex2D middleA = getVertex(0).createMiddle(getVertex(1));
+        Vertex2D middleB = getVertex(0).createMiddle(getVertex(2));
+        Vertex2D middleC = getVertex(2).createMiddle(getVertex(1));
+        triangles[0] = new Triangle(getVertex(0), middleA, middleB);
+        triangles[1] = new Triangle(getVertex(1), middleA, middleC);
+        triangles[2] = new Triangle(getVertex(2), middleC, middleB);
 
         return true;
     }
@@ -101,9 +101,9 @@ public class Triangle extends ArrayPolygon implements Measurable {
      * @return true if triangle is equilateral, else false
      */
     public boolean isEquilateral() {
-        double sideA = super.getVertex(0).distance(super.getVertex(1));
-        double sideB = super.getVertex(0).distance(super.getVertex(2));
-        double sideC = super.getVertex(2).distance(super.getVertex(1));
+        double sideA = getVertex(0).distance(getVertex(1));
+        double sideB = getVertex(0).distance(getVertex(2));
+        double sideC = getVertex(2).distance(getVertex(1));
         return  Math.abs(sideA - sideB) <= DEVIATION &&
                 Math.abs(sideA - sideC) <= DEVIATION &&
                 Math.abs(sideB - sideC) <= DEVIATION;
