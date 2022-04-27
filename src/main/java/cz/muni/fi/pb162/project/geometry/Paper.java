@@ -1,15 +1,22 @@
 package cz.muni.fi.pb162.project.geometry;
 
+import cz.muni.fi.pb162.project.exception.EmptyDrawableException;
+import cz.muni.fi.pb162.project.exception.MissingVerticesException;
+import cz.muni.fi.pb162.project.exception.TransparentColorException;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Michael Skor
  */
-public class Paper implements Drawable {
+public class Paper implements Drawable, PolygonFactory {
     private final Set<ColoredPolygon> polygons;
     private Color color = Color.BLACK;
 
@@ -34,11 +41,12 @@ public class Paper implements Drawable {
     }
 
     @Override
-    public void drawPolygon(Polygon polygon) {
-        if (color != Color.WHITE) {
-            ColoredPolygon polygonToDraw = new ColoredPolygon(polygon, color);
-            polygons.add(polygonToDraw);
+    public void drawPolygon(Polygon polygon) throws TransparentColorException {
+        if (color == Color.WHITE) {
+            throw new TransparentColorException("color is white");
         }
+        ColoredPolygon polygonToDraw = new ColoredPolygon(polygon, color);
+        polygons.add(polygonToDraw);
     }
 
     @Override
@@ -47,7 +55,10 @@ public class Paper implements Drawable {
     }
 
     @Override
-    public void eraseAll() {
+    public void eraseAll() throws EmptyDrawableException {
+        if (polygons.isEmpty()) {
+            throw new EmptyDrawableException("paper is empty");
+        }
         polygons.clear();
     }
 
@@ -70,5 +81,50 @@ public class Paper implements Drawable {
             vertices.add(polygon.getVertex(i));
         }
         return vertices;
+    }
+
+    @Override
+    public Polygon tryToCreatePolygon(List<Vertex2D> vertices) throws MissingVerticesException {
+        if (vertices == null) {
+            throw new NullPointerException("argument is null");
+        }
+        if (vertices.size() == 0){
+            throw new MissingVerticesException("no vertices");
+        }
+        List<Vertex2D> tempVertices = new ArrayList<>(vertices);
+        CollectionPolygon newCollection;
+        try {
+            newCollection = new CollectionPolygon(tempVertices);
+        } catch (IllegalArgumentException e) {
+            tempVertices.removeAll(Collections.singletonList(null));
+            return tryToCreatePolygon(tempVertices);
+        }
+        return newCollection;
+    }
+
+    @Override
+    public void tryToDrawPolygons(List<List<Vertex2D>> collectionPolygons) throws EmptyDrawableException {
+        boolean paperEmpty = true;
+        for (List<Vertex2D> vertices : collectionPolygons) {
+            try {
+                drawPolygon(tryToCreatePolygon(vertices));
+                paperEmpty = false;
+            } catch (TransparentColorException tce) {
+                changeColor(Color.BLACK);
+            } catch (MissingVerticesException | NullPointerException ignored) { }
+        }
+        if (paperEmpty) {
+            throw new EmptyDrawableException("no polygon to draw", new MissingVerticesException("missing vertices"));
+        }
+    }
+
+    /**
+     * Method returns all polygons with color
+     * @param color color
+     * @return polygons
+     */
+    public Collection<Polygon> getPolygonsWithColor(Color color) {
+        return polygons.stream().filter(polygon -> polygon.getColor() == color)
+                .map(ColoredPolygon::getPolygon).collect(Collectors.toSet());
     }
 }

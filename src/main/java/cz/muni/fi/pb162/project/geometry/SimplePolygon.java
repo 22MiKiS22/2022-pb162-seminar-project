@@ -1,5 +1,6 @@
 package cz.muni.fi.pb162.project.geometry;
 
+import cz.muni.fi.pb162.project.exception.MissingVerticesException;
 import cz.muni.fi.pb162.project.utils.SimpleMath;
 
 /**
@@ -13,6 +14,9 @@ public abstract class SimplePolygon implements Polygon {
     public SimplePolygon(Vertex2D[] vertices) {
         if (vertices == null || vertices.length == 0) {
             throw new IllegalArgumentException("vertices is null or is empty");
+        }
+        if (vertices.length < 3) {
+            throw new MissingVerticesException("less than 3 vertices");
         }
         for (Vertex2D vertex : vertices) {
             if (vertex == null) {
