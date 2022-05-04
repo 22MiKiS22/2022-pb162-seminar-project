@@ -1,9 +1,13 @@
 package cz.muni.fi.pb162.project.geometry;
 
+import cz.muni.fi.pb162.project.comparator.VertexInverseComparator;
+
+import java.util.Comparator;
+
 /**
  * @author Michael Skor
  */
-public class Vertex2D {
+public class Vertex2D implements Comparable<Vertex2D> {
     private final double x;
     private final double y;
 
@@ -68,5 +72,13 @@ public class Vertex2D {
     @Override
     public int hashCode() {
         return 31 * (int) x + (int) y;
+    }
+
+    @Override
+    public int compareTo(Vertex2D vertex) {
+        if (x == vertex.getX()) {
+            return (int) (y - vertex.getY());
+        }
+        return (int) (x - vertex.getX());
     }
 }

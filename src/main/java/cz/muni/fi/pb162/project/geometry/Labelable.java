@@ -11,7 +11,7 @@ public interface Labelable {
 
     /**
      * Get vertex stored under given label in a polygon.
-     * If label does not exists, IllegalArgumentException is thrown.
+     * If label does not exist, IllegalArgumentException is thrown.
      *
      * @param label label under which the vertex is stored
      * @return vertex with given label
