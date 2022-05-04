@@ -1,9 +1,5 @@
 package cz.muni.fi.pb162.project.geometry;
 
-import cz.muni.fi.pb162.project.comparator.VertexInverseComparator;
-
-import java.util.Comparator;
-
 /**
  * @author Michael Skor
  */
