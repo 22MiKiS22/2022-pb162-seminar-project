@@ -1,7 +1,6 @@
 package cz.muni.fi.pb162.project.geometry;
 
-import cz.muni.fi.pb162.project.comparator.VertexInverseComparator;
-
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -40,8 +39,7 @@ public final class LabeledPolygon extends SimplePolygon implements Labelable, So
     }
 
     private String getNextLetter(String current) {
-        if (current.charAt(current.length() - 1) == 'Z' &&
-                current.charAt(current.length() - 1) == current.charAt(current.length() - 2)) {
+        if (current.charAt(current.length() - 1) == 'Z') {
             current += 'A';
         } else {
             char lastChar = current.charAt(current.length() - 1);
@@ -90,7 +88,6 @@ public final class LabeledPolygon extends SimplePolygon implements Labelable, So
 
     @Override
     public Collection<Vertex2D> getSortedVertices() {
-        Comparator<Vertex2D> c = new VertexInverseComparator();
         Set<Vertex2D> sortedVertices = new HashSet<>(this.vertices.values());
         return sortedVertices.stream().sorted().collect(Collectors.toList());
     }
@@ -115,13 +112,15 @@ public final class LabeledPolygon extends SimplePolygon implements Labelable, So
      * @author Michael Skor
      */
     public static class Builder implements Buildable<LabeledPolygon> {
-        private final Map<String, Vertex2D> vertices;
+        private final List<String> labels;
+        private final List<Vertex2D> vertices;
 
         /**
          * Builder constructor
          */
         public Builder() {
-            vertices = new LinkedHashMap<>();
+            labels = new ArrayList<>();
+            vertices = new ArrayList<>();
         }
 
         /**
@@ -134,13 +133,36 @@ public final class LabeledPolygon extends SimplePolygon implements Labelable, So
             if (label == null || vert == null) {
                 throw new IllegalArgumentException("null vertex or label");
             }
-            vertices.put(label, vert);
+            labels.add(label);
+            vertices.add(vert);
             return this;
         }
 
         @Override
         public LabeledPolygon build() {
-            return new LabeledPolygon(vertices);
+            Map<String, Vertex2D> verticesMap = new LinkedHashMap<>();
+            while (labels.size() > 0) {
+                int min = getSmallestLabel();
+                verticesMap.put(labels.get(min), vertices.get(min));
+                vertices.remove(min);
+                labels.remove(min);
+            }
+            return new LabeledPolygon(verticesMap);
+        }
+
+        private int getSmallestLabel() {
+            int min = 0;
+            for (int i = 1; i < labels.size(); i++) {
+                if (labels.get(i).compareTo(labels.get(min)) < 0) {
+                    min = i;
+                } else if (labels.get(i).compareTo(labels.get(min)) == 0) {
+                    if (labels.get(i).charAt(labels.get(i).length() - 1) <
+                            labels.get(min).charAt(labels.get(min).length() - 1)) {
+                        min = i;
+                    }
+                }
+            }
+            return min;
         }
     }
 }
