@@ -1,51 +1,36 @@
 package cz.muni.fi.pb162.project.geometry;
 
-import java.util.ArrayList;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
  * @author Michael Skor
  */
-public final class LabeledPolygon extends SimplePolygon implements Labelable, Sortable {
+public final class LabeledPolygon extends SimplePolygon implements Labelable, Sortable, PolygonWritable {
     private final Map<String, Vertex2D> vertices;
-
-    /**
-     * Constructor of LabeledPolygon
-     * @param vertices vertices
-     */
-    public LabeledPolygon(List<Vertex2D> vertices) {
-        super(vertices.toArray(new Vertex2D[0]));
-        this.vertices = new LinkedHashMap<>();
-        String currentLetter = "A";
-        for (Vertex2D vertex : vertices) {
-            this.vertices.put(currentLetter, vertex);
-            currentLetter = getNextLetter(currentLetter);
-        }
-    }
 
     private LabeledPolygon(Map<String, Vertex2D> vertices) {
         super(vertices.keySet().stream().map(vertices::get).toArray(Vertex2D[]::new));
         this.vertices = vertices;
-    }
-
-    private String getNextLetter(String current) {
-        if (current.charAt(current.length() - 1) == 'Z') {
-            current += 'A';
-        } else {
-            char lastChar = current.charAt(current.length() - 1);
-            current = current.substring(current.length() - 1).replace(lastChar, ++lastChar);
-        }
-        return current;
     }
 
     @Override
@@ -53,12 +38,7 @@ public final class LabeledPolygon extends SimplePolygon implements Labelable, So
         if (index < 0) {
             throw new IllegalArgumentException("negative index");
         }
-        Iterator<Map.Entry<String, Vertex2D>> iterator = vertices.entrySet().iterator();
-        Vertex2D returnVertex = null;
-        for (int i = 0; i < index % vertices.size() + 1; i++) {
-            returnVertex = iterator.next().getValue();
-        }
-        return returnVertex;
+        return vertices.get((String) vertices.keySet().toArray()[index % vertices.size()]);
     }
 
     @Override
@@ -76,7 +56,7 @@ public final class LabeledPolygon extends SimplePolygon implements Labelable, So
 
     @Override
     public Collection<String> getLabels() {
-        return new HashSet<>(vertices.keySet());
+        return Collections.unmodifiableSet(vertices.keySet());
     }
 
     @Override
@@ -88,14 +68,14 @@ public final class LabeledPolygon extends SimplePolygon implements Labelable, So
 
     @Override
     public Collection<Vertex2D> getSortedVertices() {
-        Set<Vertex2D> sortedVertices = new HashSet<>(this.vertices.values());
-        return sortedVertices.stream().sorted().collect(Collectors.toList());
+        return new TreeSet<>(this.vertices.values());
     }
 
     @Override
     public Collection<Vertex2D> getSortedVertices(Comparator<Vertex2D> comparator) {
-        Set<Vertex2D> sortedVertices = new LinkedHashSet<>(this.vertices.values());
-        return sortedVertices.stream().sorted(comparator).collect(Collectors.toList());
+        Set<Vertex2D> v = new TreeSet<>(comparator);
+        v.addAll(vertices.values());
+        return v;
     }
 
     /**
@@ -108,19 +88,60 @@ public final class LabeledPolygon extends SimplePolygon implements Labelable, So
                 .collect(Collectors.toSet());
     }
 
+    @Override
+    public void write(OutputStream os) throws IOException {
+        try {
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os));
+            writeVertices(writer);
+        } catch (Exception e) {
+            throw new IOException("write error");
+        }
+    }
+
+    @Override
+    public void write(File file) throws IOException {
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            writeVertices(writer);
+        } catch (Exception e) {
+            throw new IOException("write error");
+        }
+    }
+
+    private void writeVertices(BufferedWriter writer) throws IOException {
+        for (String label : vertices.keySet()) {
+            writer.write(String.valueOf(vertices.get(label).getX()));
+            writer.write(String.valueOf(vertices.get(label).getY()));
+            writer.write(String.format("%f %f %s%s",
+                    vertices.get(label).getX(),
+                    vertices.get(label).getY(),
+                    label,
+                    System.lineSeparator()));
+        }
+    }
+
+    /**
+     * Method creates and writes json to given output stream
+     * @param os os
+     */
+    public void writeJson(OutputStream os) throws IOException {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os));
+        writer.write(gson.toJson(vertices));
+        writer.flush();
+    }
+
     /**
      * @author Michael Skor
      */
-    public static class Builder implements Buildable<LabeledPolygon> {
-        private final List<String> labels;
-        private final List<Vertex2D> vertices;
+    public static class Builder implements Buildable<LabeledPolygon>, PolygonReadable {
+        private final Map<String, Vertex2D> vertices;
 
         /**
          * Builder constructor
          */
         public Builder() {
-            labels = new ArrayList<>();
-            vertices = new ArrayList<>();
+            vertices = new TreeMap<>();
         }
 
         /**
@@ -133,36 +154,44 @@ public final class LabeledPolygon extends SimplePolygon implements Labelable, So
             if (label == null || vert == null) {
                 throw new IllegalArgumentException("null vertex or label");
             }
-            labels.add(label);
-            vertices.add(vert);
+            vertices.put(label, vert);
             return this;
         }
 
         @Override
         public LabeledPolygon build() {
-            Map<String, Vertex2D> verticesMap = new LinkedHashMap<>();
-            while (labels.size() > 0) {
-                int min = getSmallestLabel();
-                verticesMap.put(labels.get(min), vertices.get(min));
-                vertices.remove(min);
-                labels.remove(min);
-            }
-            return new LabeledPolygon(verticesMap);
+            return new LabeledPolygon(vertices);
         }
 
-        private int getSmallestLabel() {
-            int min = 0;
-            for (int i = 1; i < labels.size(); i++) {
-                if (labels.get(i).compareTo(labels.get(min)) < 0) {
-                    min = i;
-                } else if (labels.get(i).compareTo(labels.get(min)) == 0) {
-                    if (labels.get(i).charAt(labels.get(i).length() - 1) <
-                            labels.get(min).charAt(labels.get(min).length() - 1)) {
-                        min = i;
-                    }
-                }
+        @Override
+        public Builder read(InputStream is) throws IOException {
+            try {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                readVertices(reader);
+            } catch (Exception e) {
+                throw new IOException("bad input format");
             }
-            return min;
+            return this;
+        }
+
+        @Override
+        public Builder read(File file) throws IOException {
+            try {
+                BufferedReader reader = new BufferedReader(new FileReader(file));
+                readVertices(reader);
+            } catch (Exception e) {
+                throw new IOException("bad input format");
+            }
+            return this;
+        }
+
+        private void readVertices(BufferedReader reader) throws IOException {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] items = line.split(" ", 3);
+                vertices.put(items[2], new Vertex2D(Double.parseDouble(items[0]),
+                        Double.parseDouble(items[1])));
+            }
         }
     }
 }
